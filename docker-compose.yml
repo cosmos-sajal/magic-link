@@ -38,7 +38,8 @@ services:
     image: *app
     restart: always
     env_file: *envfile
-    command: ["celery", "worker", "--app=worker.worker.app", "--concurrency=1", "--hostname=worker@%h", "--loglevel=INFO"]
+    command: ["celery", "worker", "--app=worker.worker.app", "--concurrency=10", "--hostname=worker@%h", "--loglevel=INFO", "-Q",
+    "send_email"]
     volumes:
       - ./app:/app
     depends_on:

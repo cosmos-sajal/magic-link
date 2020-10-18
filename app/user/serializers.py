@@ -89,3 +89,31 @@ class LoginUserSerializer(serializers.Serializer):
         attrs['user'] = user
 
         return attrs
+
+
+class GenerateMagicLinkSerializer(serializers.Serializer):
+    email = serializers.CharField(required=True, max_length=255)
+
+    def __get_user(self, **param):
+        """
+        Checks if user exist in the system
+        Returns Boolean
+        """
+        try:
+            return get_user_model().objects.get(**param)
+        except ObjectDoesNotExist:
+            return None
+    
+    def validate(self, attrs):
+        """
+        Validates email and password
+        """
+
+        email = attrs.get('email')
+        user = self.__get_user(email=email)
+        if user is None:
+            raise serializers.ValidationError("User does not exist.")
+
+        attrs['user'] = user
+
+        return attrs
