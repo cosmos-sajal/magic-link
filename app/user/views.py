@@ -22,8 +22,6 @@ class RegisterUserView(APIView):
         serializer = RegisterUserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            # send_welcome_email.delay(
-            #     request.data['email'], request.data['name'])
 
             return Response({'response': 'User Created!'},
                             status=status.HTTP_201_CREATED)
@@ -68,14 +66,49 @@ class LoginView(APIView):
 
 
 
-# class UserDetailView(APIView):
-#     """
-#     Returns the user details
-#     """
+class UserDetailView(APIView):
+    """
+    Returns the user details
+    """
 
-#     renderer_classes = [TemplateHTMLRenderer]
-#     template_name = 'user/user_detail.html'
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'user/user_details.html'
 
-#     def get()
+    def __get_user_from_token(self, token):
+        """
+        Returns user from token
+
+        Args:
+            token (str)
+        """
+
+        if token is None:
+            return None
+
+        try:
+            token = Token.objects.get(key=token)
+
+            return token.user
+        except ObjectDoesNotExist:
+            return None
+
+    def get(self, request):
+        """
+        GET API -> /api/v1/user/details/
+        """
+
+        token = request.COOKIES.get('token', None)
+        user = self.__get_user_from_token(token)
+
+        if user is None:
+            return Response({
+                'is_success': False,
+                'message': 'No token or incorrect token provided.'
+            })
+        
+        return Response({
+            'is_success': True,
+            'username': user.username
+        })
 
 
