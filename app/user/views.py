@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from user.serializers import RegisterUserSerializer, LoginUserSerializer, \
     GenerateMagicLinkSerializer
+from user.services.magic_link_service import MagicLinkService
 
 from worker.send_email import send_email
 
@@ -45,8 +46,15 @@ class GenerateMagicLinkView(APIView):
 
         serializer = GenerateMagicLinkSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.validated_data['user']
-            send_email.delay(user.email, "abcd")
+            data = serializer.validated_data
+            service = MagicLinkService(request, data['user'], data['redirect_link'])
+            res = service.generate_magic_link()
+            if not res['is_success']:
+                return Response({
+                    'error': res['error']
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            send_email.delay(res['email'], res['content'])
 
             return Response({
                 'response': 'link sent to email'

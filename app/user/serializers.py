@@ -93,6 +93,7 @@ class LoginUserSerializer(serializers.Serializer):
 
 class GenerateMagicLinkSerializer(serializers.Serializer):
     email = serializers.CharField(required=True, max_length=255)
+    redirect_link = serializers.CharField(required=True, max_length=255)
 
     def __get_user(self, **param):
         """
