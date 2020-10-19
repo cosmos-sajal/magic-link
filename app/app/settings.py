@@ -26,8 +26,9 @@ SECRET_KEY = 'SECRET_KEY'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['accounts.magic.local', 'localhost']
 
+REPO_BASE_URL = 'accounts.magic.local:8000'
 
 # Application definition
 
@@ -40,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework.authtoken',
     'core',
-    'user'
+    'user',
+    'home',
 ]
 
 MIDDLEWARE = [

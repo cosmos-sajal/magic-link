@@ -1,10 +1,15 @@
+import json
+
+from django.shortcuts import redirect
+from django.core.exceptions import ObjectDoesNotExist
+from django.http.response import HttpResponseRedirect
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from django.core.exceptions import ObjectDoesNotExist
 
+from helpers.cache_adapter import CacheAdapter
 from user.serializers import RegisterUserSerializer, LoginUserSerializer, \
     GenerateMagicLinkSerializer
 from user.services.magic_link_service import MagicLinkService
@@ -47,8 +52,12 @@ class GenerateMagicLinkView(APIView):
         serializer = GenerateMagicLinkSerializer(data=request.data)
         if serializer.is_valid():
             data = serializer.validated_data
-            service = MagicLinkService(request, data['user'], data['redirect_link'])
-            res = service.generate_magic_link()
+            service = MagicLinkService()
+            res = service.generate_magic_link(
+                request,
+                data['user'],
+                data['redirect_link']
+            )
             if not res['is_success']:
                 return Response({
                     'error': res['error']
@@ -61,6 +70,57 @@ class GenerateMagicLinkView(APIView):
             }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RedirectMagicLinkView(APIView):
+    """
+    Redirect the user to the redirect link
+    corresponding to the magic link token key
+    """
+
+    def __get_token(self, user_id):
+        """
+        Return token for the user
+
+        Args:
+            user (User)
+        """
+
+        try:
+            token = Token.objects.get(user_id=user_id)
+
+            return token.key
+        except ObjectDoesNotExist:
+            token = Token.objects.create(user_id=user_id)
+
+            return token.key
+
+    def get(self, request, token):
+        """
+        GET API -> /api/v1/user/magic_link/sign_in/<token>/
+        """
+
+        service = MagicLinkService()
+        key = service.get_cache_key(token)
+        cache_adapter = CacheAdapter()
+        value = cache_adapter.get(key)
+        if value is None:
+            redirect_url = service.get_default_redirect_url()
+
+            return HttpResponseRedirect(redirect_url)
+        
+        value = json.loads(value)
+        user_id = value['user_id']
+        redirect_link = value['redirect_link']
+        token = self.__get_token(user_id)
+        response = service.set_cookies_in_response(
+            request,
+            redirect(redirect_link),
+            token
+        )
+        cache_adapter.delete(key)
+
+        return response
 
 
 class LoginView(APIView):
@@ -143,5 +203,3 @@ class UserDetailView(APIView):
             'is_success': True,
             'username': user.username
         })
-
-
