@@ -1,7 +1,9 @@
 import json
 
-from django.shortcuts import redirect
+from django.views import View
+from django.shortcuts import redirect, render
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
 from django.http.response import HttpResponseRedirect
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import status
@@ -9,6 +11,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 
+from user.services.user_service import UserService, TokenService
+from user.services.cookies_service import CookiesService
+from user.forms.user_forms import LoginForm, MagicLinkForm, RegisterUserForm
 from helpers.cache_adapter import CacheAdapter
 from user.serializers import RegisterUserSerializer, LoginUserSerializer, \
     GenerateMagicLinkSerializer
@@ -17,59 +22,78 @@ from user.services.magic_link_service import MagicLinkService
 from worker.send_email import send_email
 
 
-class RegisterUserView(APIView):
-    """
-    Creates a user in the DB
-    """
+class RegisterUserView(View):
+    form_class = RegisterUserForm
+    template_name = 'user/user_register_form.html'
 
-    def post(self, request):
-        """
-        POST API -> /api/v1/user/register/
-        Validates and creates a User in core_user table
-        """
+    def __create_user(self, data):
+        email = data['email']
+        password = data['password']
+        username = data['username']
+        user_service = UserService()
+        user_service.create_user(
+            email=email,
+            password=password,
+            username=username
+        )
 
-        serializer = RegisterUserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+    def get(self, request, **kwargs):
+        form = self.form_class()
 
-            return Response({'response': 'User Created!'},
-                            status=status.HTTP_201_CREATED)
+        return render(request, self.template_name, context={'form': form})
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+
+        if form.is_valid():
+            self.__create_user(form.cleaned_data)
+            messages.success(request, 'User registered')
+
+            return HttpResponseRedirect("/api/v1/user/login/")
+        else:
+            messages.error(
+                request, 'User registration failed!')
+            
+            return render(request, self.template_name, context={'form': form})
 
 
-class GenerateMagicLinkView(APIView):
-    """
-    Generates magic links for the user
-    and send them over the email
-    """
+class GenerateMagicLinkView(View):
+    form_class = MagicLinkForm
+    template_name = 'user/magic_link_form.html'
 
-    def post(self, request):
-        """
-        POST API -> /api/v1/user/magic_link/
-        """
+    def get(self, request, **kwargs):
+        form = self.form_class()
 
-        serializer = GenerateMagicLinkSerializer(data=request.data)
-        if serializer.is_valid():
-            data = serializer.validated_data
-            service = MagicLinkService()
-            res = service.generate_magic_link(
+        return render(request, self.template_name, context={'form': form})
+    
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            user_service = UserService()
+            user = user_service.get_user(email=email)
+            magic_link_service = MagicLinkService()
+            res = magic_link_service.generate_magic_link(
                 request,
-                data['user'],
-                data['redirect_link']
+                user,
+                "/api/v1/user/details/"
             )
+
             if not res['is_success']:
-                return Response({
-                    'error': res['error']
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+                messages.error(
+                    request, 'Link generation failed!')
+                
+                return render(request, self.template_name, context={'form': form})
+            
             send_email.delay(res['email'], res['content'])
-
-            return Response({
-                'response': 'link sent to email'
-            }, status=status.HTTP_200_OK)
+            messages.error(
+                request, 'Magic Link sent to your email!')
+        else:
+            messages.error(
+                request, 'Link generation failed!')
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return render(request, self.template_name, context={'form': form})
 
 
 class RedirectMagicLinkView(APIView):
@@ -123,40 +147,36 @@ class RedirectMagicLinkView(APIView):
         return response
 
 
-class LoginView(APIView):
-    """
-    Creates a token for login
-    """
+class LoginView(View):
+    form_class = LoginForm
+    template_name = 'user/login_form.html'
 
-    def __get_token(self, user):
-        """
-        Return token for the user
+    def get(self, request, **kwargs):
+        form = self.form_class()
 
-        Args:
-            user (User)
-        """
+        return render(request, self.template_name, context={'form': form})
+    
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
 
-        try:
-            token = Token.objects.get(user=user)
+        if form.is_valid():
+            messages.success(request, 'User logged in')
+            token_service = TokenService(form.cleaned_data['email'])
+            token = token_service.get_token()
+            print(token)
+            cookies_service = CookiesService()
+            response = cookies_service.set_cookies_in_response(
+                request,
+                redirect("/api/v1/user/details/"),
+                token
+            )
 
-            return token.key
-        except ObjectDoesNotExist:
-            token = Token.objects.create(user=user)
-
-            return token.key
-
-    def post(self, request):
-        """
-        POST API -> /api/v1/user/login/
-        """
-
-        serializer = LoginUserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-
-            return Response({'token': self.__get_token(user)}, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return response
+        else:
+            messages.error(
+                request, 'User login failed!')
+            
+        return render(request, self.template_name, context={'form': form})
 
 
 class UserDetailView(APIView):

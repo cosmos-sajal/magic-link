@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+    <form method="POST">
+    {% csrf_token %}
+    {{form.email.errors}}
+    <label for = "id_email" > Email </label> {{form.email}}
+    {{form.password.errors}}
+    <label for = "id_password" > Password </label> {{form.password}}
+    <input type = "submit" value = "Login" / >
+    <a href="http://accounts.magic.local:8000/api/v1/user/magic_link/">Click here to get magic link</a>
+    {% for message in messages %}
+        {{ message }}
+    {% endfor %}
+    </form>
+</body>
+</html>

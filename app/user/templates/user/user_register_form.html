@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+    <form method="POST">
+    {% csrf_token %}
+    {{form.email.errors}}
+    <label for = "id_email" > Email </label> {{form.email}}
+    {{form.password.errors}}
+    <label for = "id_password" > New Password </label> {{form.password}}
+    {{form.confirm_password.errors}}
+    <label for = "id_confirm_password" > Confirm password </label> {{form.confirm_password}}
+    {{form.username.errors}}
+    <label for = "id_username" > Username </label> {{form.username}}
+    <input type = "submit" value = "Register" / >
+    {% for message in messages %}
+        {{ message }}
+    {% endfor %}
+    </form>
+</body>
+</html>
