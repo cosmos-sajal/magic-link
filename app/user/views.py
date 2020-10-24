@@ -221,5 +221,6 @@ class UserDetailView(APIView):
         
         return Response({
             'is_success': True,
-            'username': user.username
+            'username': user.username,
+            'email': user.email
         })

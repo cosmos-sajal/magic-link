@@ -1,7 +1,18 @@
-<div>
-    {% if is_success %}
-        <h2 class="message-text">Hello, {{ username }}</h2>
-    {% else %}
-        <h2 class="message-text">{{ message }}</h2>
-    {% endif %}
-</div>
+{% load static %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href='{% static "user/user_details.css" %}' />
+{% if is_success %}    
+    <div class="card">
+        <img src='{% static "user/profile.jpg" %}' alt="profile_image" style="width:100%">
+        <h1>{{ username }}</h1>
+        <p class="title">{{ email }}</p>
+        <p><button>Magic Links</button></p>
+    </div>
+{% else %}
+    <div class="card">
+        <img src='{% static "user/incorrect_details.png" %}' alt="profile_image" style="width:100%">
+        <p class="title">{{ message }}</p>
+        <p><button onclick="location.href='http://accounts.magic.local:8000/api/v1/user/login/';">Try Login?</button></p>
+    </div>
+{% endif %}

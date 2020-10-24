@@ -1,16 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-</head>
+{% load static %}
+
 <body>
-    <form method="POST">
-    {% csrf_token %}
-    {{form.email.errors}}
-    <label for = "id_email" > Email </label> {{form.email}}
-    <input type = "submit" value = "Get Magic Link" / >
-    {% for message in messages %}
-        {{ message }}
-    {% endfor %}
-    </form>
+    <div class="login">
+        <link rel="stylesheet" type="text/css" href='{% static "user/style.css" %}' />
+        <div class="login-screen">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="login-form">
+                    <div class="control-group">
+                        <label class="login-field" for = "id_email" id="login-name"> Email </label> {{form.email}}
+                        {{form.email.errors}}
+                    </div>
+
+                    <input class="btn btn-primary btn-large btn-block" type = "submit" value = "Get Magic Link" / >
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
-</html>

@@ -1,22 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-</head>
+{% load static %}
+
 <body>
-    <form method="POST">
-    {% csrf_token %}
-    {{form.email.errors}}
-    <label for = "id_email" > Email </label> {{form.email}}
-    {{form.password.errors}}
-    <label for = "id_password" > New Password </label> {{form.password}}
-    {{form.confirm_password.errors}}
-    <label for = "id_confirm_password" > Confirm password </label> {{form.confirm_password}}
-    {{form.username.errors}}
-    <label for = "id_username" > Username </label> {{form.username}}
-    <input type = "submit" value = "Register" / >
-    {% for message in messages %}
-        {{ message }}
-    {% endfor %}
-    </form>
+    <div class="login">
+        <link rel="stylesheet" type="text/css" href='{% static "user/style.css" %}' />
+        <div class="login-screen">
+            <div class="app-title">
+                <h1>Register</h1>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="login-form">
+                    <div class="control-group">
+                        <label class="login-field" for = "id_email" id="login-name"> Email </label> {{form.email}}
+                        {{form.email.errors}}
+                    </div>
+
+                    <div class="control-group">
+                        <label class="login-field" type="password" for = "id_password" id="login-pass"> New Password </label> {{form.password}}
+                        {{form.password.errors}}
+                    </div>
+
+                    <div class="control-group">
+                        <label class="login-field" type="password" for = "id_confirm_password" id="login-pass"> Confirm password </label> {{form.confirm_password}}
+                        {{form.confirm_password.errors}}
+                    </div>
+
+                    <div class="control-group">
+                        <label class="login-field" for = "id_username" id="login-pass"> Username </label> {{form.username}}
+                        {{form.confirm_password.errors}}
+                    </div>
+
+                    <input class="btn btn-primary btn-large btn-block" type = "submit" value = "Register" / >
+                    <a class="login-link" href="http://accounts.magic.local:8000/api/v1/user/login/">Already a User?</a>
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
-</html>
