@@ -59,7 +59,7 @@ class MagicLinkService():
         gets expired
         """
 
-        return "/api/v1/home/"
+        return "/api/v1/user/login/"
     
     def get_cache_key(self, token):
         """

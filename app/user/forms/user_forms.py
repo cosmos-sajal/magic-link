@@ -5,11 +5,33 @@ from user.services.user_service import UserService
 
 
 class RegisterUserForm(forms.Form):
-    email = forms.EmailField(label='Email')
-    password = forms.CharField(label='Password', max_length=255)
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.TextInput(attrs={
+            'autocomplete':'off'
+        })
+    )
+    password = forms.CharField(
+        label='Password',
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'autocomplete':'off'
+        })
+    )
     confirm_password = forms.CharField(
-        label='Confirm Password', max_length=255)
-    username = forms.CharField(label='Username', max_length=20)
+        label='Confirm Password',
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'autocomplete':'off'
+        })
+    )
+    username = forms.CharField(
+        label='Username',
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'autocomplete':'off'
+        })
+    )
     error_messages = {
         'password_mismatch': ("The two password fields didn't match."),
         'email_exist': ("User with this email is already registered."),
@@ -55,8 +77,19 @@ class RegisterUserForm(forms.Form):
 
 
 class LoginForm(forms.Form):
-    email = forms.EmailField(label='Email')
-    password = forms.CharField(label='Password', max_length=255)
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.TextInput(attrs={
+            'autocomplete':'off'
+        })
+    )
+    password = forms.CharField(
+        label='Password',
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'autocomplete':'off'
+        })
+    )
     error_messages = {
         'email_unregistered': ("The email is not registered."),
         'incorrect_password': ("Password is incorrect.")
@@ -89,7 +122,12 @@ class LoginForm(forms.Form):
 
 
 class MagicLinkForm(forms.Form):
-    email = forms.EmailField(label='Email')
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.TextInput(attrs={
+            'autocomplete':'off'
+        })
+    )
     error_messages = {
         'email_unregistered': ("The email is not registered.")
     }
