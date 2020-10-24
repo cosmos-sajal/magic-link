@@ -163,7 +163,6 @@ class LoginView(View):
             messages.success(request, 'User logged in')
             token_service = TokenService(form.cleaned_data['email'])
             token = token_service.get_token()
-            print(token)
             cookies_service = CookiesService()
             response = cookies_service.set_cookies_in_response(
                 request,
@@ -224,3 +223,25 @@ class UserDetailView(APIView):
             'username': user.username,
             'email': user.email
         })
+
+
+class LogoutView(APIView):
+    """
+    Logsout a user by deleting the token
+    from cookies
+    """
+
+    def get(self, request):
+        """
+        GET API -> /api/v1/user/logout/
+        """
+
+        token = request.COOKIES.get('token', None)
+        cookies_service = CookiesService()
+        token_service = TokenService(token=token)
+        token_service.delete_token()
+        response = cookies_service.delete_cookies_in_response(
+            HttpResponseRedirect("/api/v1/user/login/")
+        )
+
+        return response

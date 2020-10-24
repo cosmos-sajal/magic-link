@@ -48,7 +48,7 @@ class MagicLinkService():
         """
 
         domain_helper = DomainHelper(request)
-        return domain_helper.get_domain_url() + \
+        return "http://" + domain_helper.get_domain_url() + \
             "/api/v1/user/magic_link/sign_in/" + \
             token + "/"
     

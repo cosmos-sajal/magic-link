@@ -27,9 +27,10 @@ class UserService():
 
 
 class TokenService():
-    def __init__(self, email):
+    def __init__(self, email=None, **kwargs):
         self.email = email
         self.user_service = UserService()
+        self.token = kwargs.pop('token', None)
     
     def get_token(self):
         user = self.user_service.get_user(email=self.email)
@@ -42,3 +43,7 @@ class TokenService():
             token = Token.objects.create(user=user)
 
             return token.key
+
+    def delete_token(self):
+        if self.token is not None:
+            Token.objects.filter(key=self.token).delete()
